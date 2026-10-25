@@ -1,0 +1,4 @@
+alpha,Sim P0,Paper P0,Sim P(Red >= 1),Paper P(Red >= 1),Sim P(Enh >= Red),Paper P(Enh >= Red),Sim P_rel Mean,Paper P_rel Mean,Sim P_rel Std,Paper P_rel Std,Sim P_rel VaR 5%,Paper P_rel VaR 5%,Sim P_rel VaR 1%,Paper P_rel VaR 1%,Sim V_rel Mean,Paper V_rel Mean
+0.0,193.78,277.33,67.9%,40.7%,65.9%,70.6%,1.158,1.139,0.271,0.228,0.772,0.817,0.658,0.697,1.026,0.945
+0.2,188.54,269.84,58.3%,35.4%,76.3%,73.2%,1.174,1.128,0.267,0.207,0.788,0.841,0.675,0.729,1.023,0.957
+0.4,180.41,258.21,47.9%,28.2%,89.0%,77.1%,1.206,1.111,0.271,0.178,0.815,0.873,0.698,0.776,1.024,0.976

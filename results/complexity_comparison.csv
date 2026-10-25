@@ -1,0 +1,5 @@
+Algorithm,Time Complexity,Space Complexity,"Typical Operations (n_S=26000, n_a=21)",Feasibility,Theoretical Guarantee,Typical Operations (T=10),Typical Operations (K <= 7 iters),Typical Operations (M ~ 300-500 iters)
+Brute-Force Enumeration,O(n_a^n_S * n_S^2),O(n_S^2),"21^26,000 ~ 10^34,375",Completely Infeasible,Global Optimum (exhaustion),,,
+Backward Induction (Finite Horizon T),O(T * n_S * n_a * n_Z),O(n_S),,Feasible (finite horizon only),Exact finite-horizon Bellman,"10 * 26,000 * 21 * 40 ~ 2.18 * 10^8",,
+Howard's Policy Iteration (Infinite Horizon),O(K * (n_S * n_a * n_Z + nnz(Q)^1.2)),O(n_S * n_Z + n_S),,Extremely Fast (~2-3 seconds),Exact infinite-horizon optimum (Theorem 5),,7 * (2.18 * 10^7 eval + 0.1s sparse solve),
+Value Iteration (Bellman Operator),O(M * n_S * n_a * n_Z),O(n_S * n_a * n_Z),,Moderately Fast,Geometric contraction (Banach fixed point),,,400 * 2.18 * 10^7 ops ~ 12 seconds
