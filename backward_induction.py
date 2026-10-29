@@ -128,3 +128,60 @@ def backward_induction(
         policy_by_year=policy_by_year,
         value_by_year=value_by_year,
     )
+
+
+def compare_policies(
+    sol_a: Solution,
+    sol_b: Solution,
+    ref: Solution | None = None,
+) -> dict[str, float]:
+    """Compare two policies and evaluate exact vs near-tie action agreement.
+
+    Parameters:
+        sol_a: First solution (e.g., BackwardSolution).
+        sol_b: Second solution (e.g., Solution from policy_iteration).
+        ref: Optional converged reference solution (with ref.value) used to evaluate
+            regret for sol_a actions relative to the reference Q-function:
+            regret(s) = max_a Q_ref(s, a) - Q_ref(s, a_chosen).
+            An action is equivalent if regret <= 1e-9 * (1 + |V_ref(s)|).
+
+    Returns:
+        Dictionary with:
+            - exact_agreement_pct: Percentage of states where action indices match exactly.
+            - mean_abs_action_diff: Mean absolute difference between risky asset shares.
+            - equivalent_action_pct: (If ref provided) Percentage of states where
+              sol_a action achieves near-optimal value within the near-tie tolerance.
+    """
+    g = sol_a.grids
+    p = sol_a.params
+
+    exact_pct = float(np.mean(sol_a.policy == sol_b.policy) * 100.0)
+    a_a = g.a[sol_a.policy]
+    a_b = g.a[sol_b.policy]
+    mean_diff = float(np.mean(np.abs(a_a - a_b)))
+
+    out: dict[str, float] = {
+        "exact_agreement_pct": exact_pct,
+        "mean_abs_action_diff": mean_diff,
+    }
+
+    if ref is not None and getattr(ref, "value", None) is not None:
+        ref_g = getattr(ref, "grids", g)
+        ref_p = getattr(ref, "params", p)
+        nxt = getattr(ref, "_nxt", None) or getattr(sol_a, "_nxt", None) or getattr(sol_b, "_nxt", None)
+        if nxt is None:
+            nxt = build_next_state(ref_g)
+        reward = ref_p.reward_scale * utility(ref_g.P_s, ref_p.F)
+        q_ref = _q_values(ref_g, nxt, ref.value, reward)
+
+        # Evaluate regret of sol_a's chosen action against ref Q-values
+        # (If ref is sol_a, evaluate sol_b's actions)
+        a_chosen = sol_b.policy if ref is sol_a else sol_a.policy
+        v_ref = ref.value
+        regret = q_ref.max(axis=1) - q_ref[np.arange(ref_g.n_S), a_chosen]
+        tol = 1e-9 * (1.0 + np.abs(v_ref))
+        eq_pct = float(np.mean(regret <= tol) * 100.0)
+        out["equivalent_action_pct"] = eq_pct
+
+    return out
+
