@@ -185,3 +185,171 @@ def compare_policies(
 
     return out
 
+
+def run_horizon_sweep(
+    p: Params,
+    horizons: list[int] | tuple[int, ...] = (5, 10, 20, 40, 80, 160),
+    out_dir: str = "results",
+) -> list[dict[str, float]]:
+    """Run a horizon sweep comparing Backward Induction to stationary Policy Iteration.
+
+    Saves results to:
+        - {out_dir}/bi_vs_pi_horizon.csv
+        - {out_dir}/bi_vs_pi_horizon.png
+
+    Returns:
+        List of result dictionaries per horizon.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    os.makedirs(out_dir, exist_ok=True)
+    csv_path = os.path.join(out_dir, "bi_vs_pi_horizon.csv")
+    png_path = os.path.join(out_dir, "bi_vs_pi_horizon.png")
+
+    print(f"\nSolving reference infinite-horizon Policy Iteration (n_V={p.n_V}, n_S={p.n_V * p.n_ccr})...")
+    t0_pi = time.perf_counter()
+    pi_sol = policy_iteration(p)
+    t_pi = time.perf_counter() - t0_pi
+    print(f"Policy Iteration converged in {pi_sol.iterations} iterations ({t_pi:.2f}s).")
+
+    g = pi_sol.grids
+    nxt = build_next_state(g)
+
+    rows = []
+    print(f"\nRunning Backward Induction horizon sweep across T in {list(horizons)}...")
+    print(f"{'T':>4} | {'Exact Match':>11} | {'Equiv Match':>11} | {'Mean |Δa|':>10} | {'Value Gap':>11} | {'gamma^T':>11}")
+    print("-" * 72)
+
+    for T in horizons:
+        bi_sol = backward_induction(p, T=T, g=g, nxt=nxt)
+        cmp_res = compare_policies(bi_sol, pi_sol, ref=pi_sol)
+        val_gap = float(np.max(np.abs(bi_sol.value - pi_sol.value)))
+        gamma_pow = float(p.gamma ** T)
+
+        row = {
+            "T": int(T),
+            "exact_agreement_pct": float(cmp_res["exact_agreement_pct"]),
+            "equivalent_action_pct": float(cmp_res["equivalent_action_pct"]),
+            "mean_abs_action_diff": float(cmp_res["mean_abs_action_diff"]),
+            "value_gap_max": val_gap,
+            "gamma_pow_T": gamma_pow,
+        }
+        rows.append(row)
+        print(
+            f"{T:4d} | {row['exact_agreement_pct']:10.2f}% | "
+            f"{row['equivalent_action_pct']:10.2f}% | "
+            f"{row['mean_abs_action_diff']:10.4f} | "
+            f"{row['value_gap_max']:11.4e} | "
+            f"{row['gamma_pow_T']:11.4e}"
+        )
+
+    # Save CSV
+    fieldnames = [
+        "T",
+        "exact_agreement_pct",
+        "equivalent_action_pct",
+        "mean_abs_action_diff",
+        "value_gap_max",
+        "gamma_pow_T",
+    ]
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        import csv
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+    print(f"\nSaved horizon comparison table to: {csv_path}")
+
+    # Plot figure
+    fig, ax1 = plt.subplots(figsize=(8, 5))
+    ts = [r["T"] for r in rows]
+    exacts = [r["exact_agreement_pct"] for r in rows]
+    equivs = [r["equivalent_action_pct"] for r in rows]
+    gammas = [r["gamma_pow_T"] for r in rows]
+
+    color1 = "#1f77b4"
+    color2 = "#2ca02c"
+    color3 = "#d62728"
+
+    l1 = ax1.plot(ts, exacts, "o-", color=color1, lw=2, label="Exact Action Agreement (%)")
+    l2 = ax1.plot(ts, equivs, "s--", color=color2, lw=2, label="Equivalent Action Agreement (%)")
+    ax1.set_xlabel("Planning Horizon T (years)", fontsize=11)
+    ax1.set_ylabel("Year-0 Policy Agreement with PI (%)", color=color1, fontsize=11)
+    ax1.set_ylim(-2, 105)
+    ax1.grid(True, linestyle=":", alpha=0.6)
+
+    ax2 = ax1.twinx()
+    l3 = ax2.plot(ts, gammas, "^-.", color=color3, lw=1.8, label=r"Contraction Bound $\gamma^T$")
+    ax2.set_ylabel(r"Discount Factor $\gamma^T$", color=color3, fontsize=11)
+    ax2.set_yscale("log")
+
+    lines = l1 + l2 + l3
+    labels = [l.get_label() for l in lines]
+    ax1.legend(lines, labels, loc="center right", fontsize=9)
+    plt.title(f"Backward Induction Horizon Convergence to Stationary Policy (n_V={p.n_V})", fontsize=12, fontweight="bold")
+    plt.tight_layout()
+    plt.savefig(png_path, dpi=200)
+    plt.close(fig)
+    print(f"Saved horizon comparison plot to: {png_path}")
+
+    return rows
+
+
+def main() -> None:
+    """CLI entry point for Backward Induction and horizon sweeps."""
+    import argparse
+    from pension_core import policy_iteration
+
+    parser = argparse.ArgumentParser(
+        description="Finite-horizon Backward Induction solver for pension-dp."
+    )
+    parser.add_argument("--T", type=int, default=10, help="Planning horizon T in years (default: 10)")
+    parser.add_argument("--n-v", type=int, default=200, help="Number of wealth grid points (default: 200)")
+    parser.add_argument(
+        "--horizons",
+        type=str,
+        default="5,10,20,40,80,160",
+        help="Comma-separated horizon values for sweep (default: 5,10,20,40,80,160)",
+    )
+    parser.add_argument("--out-dir", type=str, default="results", help="Directory to save artifacts (default: results)")
+    parser.add_argument("--no-sweep", action="store_true", help="Skip horizon sweep and only solve specified T")
+
+    args = parser.parse_args()
+    p = Params(n_V=args.n_v)
+
+    print("=" * 75)
+    print(f"BACKWARD INDUCTION SOLVER (T={args.T}, n_V={args.n_v}, n_S={args.n_v * p.n_ccr})")
+    print("=" * 75)
+
+    # (a) Solve for given T and compare with Policy Iteration
+    print(f"\n1. Solving Policy Iteration (infinite-horizon baseline)...")
+    pi_sol = policy_iteration(p)
+    print(f"   Converged in {pi_sol.iterations} iterations ({pi_sol.seconds:.2f}s).")
+
+    print(f"\n2. Solving Backward Induction (T={args.T} years)...")
+    bi_sol = backward_induction(p, T=args.T, g=pi_sol.grids)
+    print(f"   Completed {bi_sol.iterations} stages in {bi_sol.seconds:.2f}s.")
+
+    cmp_res = compare_policies(bi_sol, pi_sol, ref=pi_sol)
+    print("\n3. Year-0 Policy Comparison (BI T=10 vs Stationary PI):")
+    print(f"   - Exact action agreement:     {cmp_res['exact_agreement_pct']:.2f}%")
+    print(f"   - Equivalent-action agreement: {cmp_res['equivalent_action_pct']:.2f}%")
+    print(f"   - Mean |delta action|:         {cmp_res['mean_abs_action_diff']:.4f}")
+    print(f"   - Max |V_0^(T) - V_PI|:        {float(np.max(np.abs(bi_sol.value - pi_sol.value))):.4e}")
+    print(f"   - Theoretical gamma^T:         {p.gamma ** args.T:.4e}")
+
+    # (b) Horizon sweep
+    if not args.no_sweep:
+        horizons = [int(h.strip()) for h in args.horizons.split(",") if h.strip()]
+        run_horizon_sweep(p, horizons=horizons, out_dir=args.out_dir)
+
+    print("\n" + "=" * 75)
+    print("BACKWARD INDUCTION COMPLETED")
+    print("=" * 75)
+
+
+if __name__ == "__main__":
+    main()
+
+
