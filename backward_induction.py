@@ -221,8 +221,8 @@ def run_horizon_sweep(
 
     rows = []
     print(f"\nRunning Backward Induction horizon sweep across T in {list(horizons)}...")
-    print(f"{'T':>4} | {'Exact Match':>11} | {'Equiv Match':>11} | {'Mean |Δa|':>10} | {'Value Gap':>11} | {'gamma^T':>11}")
-    print("-" * 72)
+    print(f"{'T':>4} | {'Exact Match':>11} | {'Equiv Match':>11} | {'Mean |delta a|':>15} | {'Value Gap':>11} | {'gamma^T':>11}")
+    print("-" * 78)
 
     for T in horizons:
         bi_sol = backward_induction(p, T=T, g=g, nxt=nxt)
@@ -242,7 +242,7 @@ def run_horizon_sweep(
         print(
             f"{T:4d} | {row['exact_agreement_pct']:10.2f}% | "
             f"{row['equivalent_action_pct']:10.2f}% | "
-            f"{row['mean_abs_action_diff']:10.4f} | "
+            f"{row['mean_abs_action_diff']:15.4f} | "
             f"{row['value_gap_max']:11.4e} | "
             f"{row['gamma_pow_T']:11.4e}"
         )
