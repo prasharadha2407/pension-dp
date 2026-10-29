@@ -20,6 +20,7 @@ from pension_core import (
     Solution,
     _q_values,
     build_next_state,
+    policy_iteration,
     utility,
 )
 
