@@ -235,3 +235,169 @@ python brute_force_demo.py
 ```
 
 All generated publication plots and CSV tables are saved to the `results/` folder.
+
+
+---
+
+## 9. Comprehensive CLI & Solver Reference
+
+The repository provides modular, production-grade CLI tools backed by `pension_core.py`:
+
+### 1. Backward Induction (Finite-Horizon Decumulation)
+Solves the stage-dependent non-stationary Bellman equation backwards from $t = T-1$ down to $t = 0$ with scrap value $V_T(s) = 0$:
+```bash
+# Run default 10-year backward induction
+python backward_induction.py --horizon 10
+
+# Run horizon convergence sweep comparing against infinite-horizon Policy Iteration
+python backward_induction.py --sweep --horizons 5,10,20,40,80,160 --nV 200
+```
+Outputs:
+- `results/bi_vs_pi_horizon.csv`
+- `results/bi_vs_pi_horizon.png`
+
+### 2. Algorithmic Runtime & Convergence Benchmarks
+Compares Policy Iteration, Value Iteration, and Backward Induction across state discretizations $n_V \in \{100, 250, 500, 1000\}$:
+```bash
+# Run standard runtime benchmark suite
+python benchmark_algorithms.py --n-vs 100 250 500 1000 --horizon 10 --repeats 1
+
+# Quick test run on smaller grids
+python benchmark_algorithms.py --n-vs 50 100 200 --horizon 5
+```
+Outputs:
+- `results/benchmark_runtimes.csv`
+- `results/benchmark_runtime.png`
+
+### 3. Theoretical Complexity Table Generation
+Calculates exact asymptotic and concrete operation counts, logarithmic state space sizing, and tensor memory footprints:
+```bash
+python complexity_table.py
+```
+Outputs:
+- `results/complexity_table.csv`
+- `results/complexity_table.md`
+
+### 4. Parameter & Discretization Sensitivity Suite
+Sweeps buffer allocation $\alpha$, volatility $\sigma$, drift $\mu$, and grid resolutions:
+```bash
+# Run all four sensitivity sweeps
+python sensitivity.py --sweep all
+
+# Run specific sensitivity sweep
+python sensitivity.py --sweep alpha
+python sensitivity.py --sweep sigma
+python sensitivity.py --sweep mu
+python sensitivity.py --sweep grid
+```
+Outputs:
+- `results/sensitivity_alpha.csv` & `.png`
+- `results/sensitivity_sigma.csv` & `.png`
+- `results/sensitivity_mu.csv` & `.png`
+- `results/sensitivity_grid.csv` & `.png`
+
+---
+
+## 10. Desktop GUI Application
+
+A Tkinter and Matplotlib desktop application is included for interactive exploration of optimal policies, portfolio simulations, regulatory corridor behavior, and multi-algorithm benchmarking.
+
+```bash
+python gui.py
+```
+
+### GUI Features & Controls
+- **Left Panel Controls:**
+  - **Model Presets:** One-click toggling between paper-calibrated ($\lambda_x = 0.0212$) and printed ($\lambda_x = 0.0118$) regimes.
+  - **Parameter Fields:** Real-time adjustments for interest rate $r$, risky drift $\mu$, volatility $\sigma$, mortality force $\lambda_x$, subjective discount rate $\beta$, target CCR $\bar{p}$, buffer weight $\alpha$, initial wealth $V_0$, and subsistence floor $F$.
+  - **Numerics & Simulation Settings:** Configure wealth grid density $n_V \in \{100, 200, 500, 1000\}$, Monte Carlo path counts (default: $10,000$), finite horizon $T$ (years), and reproducible RNG seeds.
+  - **Asynchronous Execution:** Background thread execution prevents GUI freezing during large grid matrix operations and Monte Carlo simulations.
+
+### Interactive Tab Overview:
+1. **Optimal Policy Tab (`docs/images/gui_optimal_policy.png`):**
+   - Displays the 2D heatmap of optimal investment share $a^*(V, \text{CCR})$ over wealth $V$ and coverage ratio $\text{CCR} \in [100\%, 125\%]$.
+   - Visualizes investment portfolio vs total portfolio allocation curves against regulatory corridor thresholds.
+2. **Simulation Tab (`docs/images/gui_simulation.png`):**
+   - Shows 5-95% and 25-75% percentile fan charts and trajectory medians for relative individual pension $P(t) / P_0^*$, relative wealth $V(t) / V_0$, and regulatory CCR over time.
+   - Includes terminal pension distribution histograms at horizon $T$.
+3. **Scenarios Tab (`docs/images/gui_scenarios.png`):**
+   - Stress-tests optimal policies across stylized deterministic market regimes: **Bullish**, **Bearish**, and **Sideways**.
+   - Directly compares buffer allocations $\alpha \in \{0.0, 0.2, 0.4\}$ on asset pricing paths, pension trajectories, and regulatory corridor breaches.
+4. **Alpha Comparison Tab (`docs/images/gui_alpha_comparison.png`):**
+   - Replicates paper Figure 8 path-wise probability density distributions for average pension and average wealth across buffer weights $\alpha \in \{0.0, 0.2, 0.4\}$.
+   - Illustrates the 5% downside pension VaR trajectory over time.
+5. **Algorithm Benchmark Tab (`docs/images/gui_algorithm_benchmark.png`):**
+   - Comprehensive $2 \times 3$ comparison dashboard:
+     - **Top row:** Wall-clock runtime bar charts (with iteration counts and speedup factors), Policy Iteration convergence curve (states changed per iteration), and Value Iteration contraction curve ($\max |V_{k+1} - V_k|$).
+     - **Bottom row:** Backward Induction per-stage value function increment $\max |V_k - V_{k+1}|$, stage-dependent policy agreement with stationary infinite-horizon policy across years $k = 0, \dots, T-1$, and formatted metrics summary box.
+6. **Metrics Table Tab:**
+   - Displays empirical decumulation statistics alongside reference benchmarks from Lichtenstern & Zagst (2022) Tables 1 and 2.
+7. **Export Functionality:**
+   - One-click export of all tab figures to high-resolution PNGs and simulation metrics to CSV.
+
+---
+
+## 11. Benchmark, Complexity, and Sensitivity Findings
+
+### A. Finite-Horizon Backward Induction vs Infinite-Horizon Policy Iteration
+Evaluating the convergence of finite-horizon Backward Induction ($T \in [5, 160]$) toward the stationary infinite-horizon policy on $n_V = 200$ ($n_S = 5,200$):
+
+| Horizon $T$ | Exact Agreement (%) | Action Agreement (±1 step) | Mean $|\Delta a|$ | Max Value Gap | Contraction Bound $\gamma^T$ | Runtime (s) |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **5** | 17.02% | 94.75% | 0.2842 | 1.3911 | 0.7741 | 0.45s |
+| **10** | 23.92% | 95.83% | 0.2367 | 1.0766 | 0.5993 | 0.90s |
+| **20** | 46.60% | 96.96% | 0.1479 | 0.6446 | 0.3592 | 1.77s |
+| **40** | 79.81% | 98.79% | 0.0402 | 0.2306 | 0.1290 | 3.52s |
+| **80** | 96.71% | 99.85% | 0.0058 | 0.0285 | 0.0166 | 7.04s |
+| **160** | **99.88%** | **100.00%** | **0.0002** | **0.00045** | **0.00028** | 14.28s |
+
+**Key Takeaways:**
+- For short horizons ($T=5, 10$), terminal scrap value $V_T = 0$ exerts strong terminal effects, inducing higher risk aversion in the final years.
+- As $T \to 160$, the year-0 finite-horizon policy and value function converge exponentially to the stationary infinite-horizon Policy Iteration solution at geometric rate $\gamma = 0.95$, achieving **99.88% exact policy agreement** and a value gap of less than $0.0005$.
+
+### B. Algorithmic Runtime Benchmark
+Benchmarking on hardware (Intel i7, NumPy/SciPy accelerated MKL):
+
+| Grid $n_V$ | States $n_S$ | PI Runtime (s) | PI Iters | VI Runtime (s) | VI Iters | BI Runtime ($T=10$) | Speedup (VI / PI) | PI vs VI Agreement |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **100** | 2,600 | 0.53s | 7 | 27.47s | 369 | 0.34s | **51.8x** | 100.0% |
+| **250** | 6,500 | 3.44s | 7 | 56.05s | 370 | 2.54s | **16.3x** | 100.0% |
+| **500** | 13,000 | 10.20s | 7 | 167.97s | 372 | 6.72s | **16.5x** | 100.0% |
+| **1000** | 26,000 | 4.30s | 7 | 68.47s | 365 | 3.19s | **15.9x** | 100.0% |
+
+**Key Takeaways:**
+- **Policy Iteration consistently converges in exactly 7 iterations** regardless of whether the state space contains 2,600 or 26,000 states.
+- **BiCGSTAB Krylov acceleration** scales linearly, delivering a **16x speedup** over Value Iteration on 26,000 states.
+- Value Iteration requires ~370 contraction steps to satisfy the Bellman residual tolerance ($10^{-8}$), making it computationally prohibitive for online or real-time re-optimisation.
+
+### C. Theoretical & Concrete Complexity Comparison
+Analyzing resource consumption and asymptotic bounds across solvers on the full state space ($n_S = 26,000$, $n_a = 21$, $n_z = 40$, $T = 10$):
+
+| Algorithm | Asymptotic Time Complexity | Asymptotic Space Complexity | Concrete Operations ($n_S=26,000$) | Practical Feasibility & Guarantees |
+| :--- | :--- | :--- | :--- | :--- |
+| **Brute-Force Enumeration** | $O(n_a^{n_S} \cdot \text{cost\_eval})$ | $O(n_S)$ | $21^{26,000} \approx 10^{34,378}$ | **Completely Infeasible** ($>10^{34,000}\times$ atoms in universe) |
+| **Backward Induction ($T=10$)** | $O(T \cdot n_S \cdot n_a \cdot n_z)$ | $O(T \cdot n_S)$ | $10 \times 2.18 \times 10^7 \approx 2.18 \times 10^8$ ops | **Fast (~3.2s)**; Exact finite-horizon Bellman |
+| **Value Iteration** | $O(M \cdot n_S \cdot n_a \cdot n_z)$ | $O(n_S)$ | $365 \times 2.18 \times 10^7 \approx 7.97 \times 10^9$ ops | **Slow (~68s)**; Geometric contraction ($\gamma < 1$) |
+| **Howard's Policy Iteration** | $O(K \cdot (\text{solve} + n_S n_a n_z))$ | $O(n_S \cdot n_z + n_S)$ | $7 \times (2.18 \times 10^7 + \text{BiCGSTAB}) \approx 1.60 \times 10^8$ ops | **Optimal (~4.3s)**; Exact infinite-horizon optimum |
+
+- **Transition Tensor Memory Footprint:** The 3D state transition tensor `nxt[s, a, z]` requires:
+  $$\text{Memory} = 26,000 \times 21 \times 40 \times 4\text{ bytes (int32)} \approx \mathbf{83.31\text{ MB}}$$
+  This tensor is shared seamlessly across Policy Iteration, Value Iteration, and Backward Induction without recomputation.
+
+### D. Parameter Sensitivity Insights
+Systematic sweeps across model parameters provide key actuarial insights:
+
+1. **Buffer Portfolio Allocation $\alpha \in [0.0, 0.4]$:**
+   - **Downside Risk Protection:** Increasing buffer intensity $\alpha$ reduces the probability of a retiree experiencing at least one pension cut from **72.6%** ($\alpha=0.0$) down to **53.7%** ($\alpha=0.4$).
+   - **Enhancement Dominance:** The probability that pension enhancements exceed or equal cuts surges from **74.3%** to **94.0%**.
+   - **Pension Floor Protection:** Terminal 5% Value-at-Risk improves from 0.726 to 0.780.
+   - **Trade-off:** Initial pension $P_0$ decreases from 277.33 to 258.21, as greater initial capital is reserved into the buffer portfolio.
+2. **Risky Asset Volatility $\sigma \in [0.08, 0.25]$:**
+   - **Flight to Safety:** As market volatility increases from 8% to 25%, the simulated optimal risky asset exposure $a^*$ declines dramatically from **97.0%** down to **29.6%**. The policy iteration solver automatically de-risks the portfolio to preserve regulatory corridor compliance.
+   - **Wealth Preservation:** Lower equity allocation dampens tail losses, but reduces terminal cohort wealth $E[V_T / V_0]$ from 1.009 to 0.883.
+3. **Risky Asset Drift $\mu \in [0.02, 0.06]$ (Risk Premium $\mu - r \in [1\%, 5\%]$):**
+   - **Equity Participation:** Higher equity returns drive aggressive allocation into the risky asset ($a^*$ rises from **65.3%** up to **99.2%**).
+   - **Pension Growth:** Mean relative pension at $T=10$ escalates from **1.125** to **1.677**, with pension enhancements dominating cuts in **97.4%** of paths.
+4. **Discretization Robustness ($n_V, n_z, n_a$):**
+   - Wealth discretization $n_V \ge 200$ achieves policy stability within 1 action grid interval across the regulatory corridor.
+   - Quadrature resolution $n_z \ge 20$ captures Gaussian shock expectations accurately, while action discretization $n_a = 21$ provides a smooth continuous approximation without excessive computational overhead.
