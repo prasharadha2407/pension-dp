@@ -24,15 +24,42 @@ import gui_plots as gp
 
 # Reference numbers quoted in the project README for paper Tables 1/2 (10,000 paths, 10 years).
 PAPER_REF = {
-    0.0: {"P(>=1 pension cut)": .407, "P(#enh >= #cuts)": .706, "Rel. pension mean (T)": 1.139,
-          "Rel. pension std (T)": .228, "Rel. pension VaR 5%": .817, "Rel. pension VaR 1%": .697,
-          "Rel. wealth mean (T)": .945, "Initial pension P0": 277.33},
-    0.2: {"P(>=1 pension cut)": .354, "P(#enh >= #cuts)": .732, "Rel. pension mean (T)": 1.128,
-          "Rel. pension std (T)": .207, "Rel. pension VaR 5%": .841,
-          "Rel. wealth mean (T)": .957, "Initial pension P0": 269.84},
-    0.4: {"P(>=1 pension cut)": .282, "P(#enh >= #cuts)": .771, "Rel. pension mean (T)": 1.111,
-          "Rel. pension VaR 5%": .873, "Rel. pension VaR 1%": .776,
-          "Rel. wealth mean (T)": .976, "Initial pension P0": 258.21},
+    0.0: {
+        "Initial pension P0": 277,
+        "P(>=1 pension cut)": 0.495,
+        "P(#enh >= #cuts)": 0.844,
+        "P(avg pension > P0)": 0.741,
+        "Rel. pension mean (T)": 1.075,
+        "Rel. pension std (T)": 0.181,
+        "Rel. pension VaR 5%": 0.833,
+        "Rel. pension VaR 1%": 0.719,
+        "Rel. wealth mean (T)": 0.966,
+        "Rel. wealth std (T)": 0.157,
+    },
+    0.2: {
+        "Initial pension P0": 270,
+        "P(>=1 pension cut)": 0.364,
+        "P(#enh >= #cuts)": 0.913,
+        "P(avg pension > P0)": 0.808,
+        "Rel. pension mean (T)": 1.084,
+        "Rel. pension std (T)": 0.168,
+        "Rel. pension VaR 5%": 0.848,
+        "Rel. pension VaR 1%": 0.751,
+        "Rel. wealth mean (T)": 0.962,
+        "Rel. wealth std (T)": 0.143,
+    },
+    0.4: {
+        "Initial pension P0": 258,
+        "P(>=1 pension cut)": 0.255,
+        "P(#enh >= #cuts)": 0.968,
+        "P(avg pension > P0)": 0.861,
+        "Rel. pension mean (T)": 1.109,
+        "Rel. pension std (T)": 0.170,
+        "Rel. pension VaR 5%": 0.865,
+        "Rel. pension VaR 1%": 0.770,
+        "Rel. wealth mean (T)": 0.965,
+        "Rel. wealth std (T)": 0.146,
+    },
 }
 
 FIELDS = [  # key, label, default
@@ -124,7 +151,8 @@ class App:
         self.tree = ttk.Treeview(tab, show="headings"); self.tree.pack(fill="both", expand=True)
         note = ttk.Label(tab, foreground="#555", wraplength=900, text=(
             "'paper' columns are the reference values quoted in the project README for Tables 1/2. "
-            "Differences are expected: see the README's note on the lambda discrepancy."))
+            "Differences are expected: see the README's note on the lambda discrepancy; "
+            "paper values may pool over years; ours are terminal year t=10 (hypothesis, not verified)."))
         note.pack(anchor="w", padx=6, pady=4)
         logf = ttk.Frame(self.nb); self.nb.add(logf, text="Log")
         self.logbox = tk.Text(logf, height=10, state="disabled", wrap="word"); self.logbox.pack(fill="both", expand=True)
