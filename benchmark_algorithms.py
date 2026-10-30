@@ -31,20 +31,31 @@ from pension_core import (
 )
 
 
+def _set_benchmark_process_priority() -> None:
+    """Optionally request high priority on Windows to reduce background scheduling jitter."""
+    try:
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        # HIGH_PRIORITY_CLASS = 0x00000080
+        kernel32.SetPriorityClass(kernel32.GetCurrentProcess(), 0x00000080)
+    except Exception:
+        pass
+
+
 def run_benchmark(
     n_vs: Sequence[int] = (100, 250, 500, 1000),
     T: int = 10,
-    repeats: int = 1,
+    repeats: int = 3,
     out_dir: str = "results",
     skip_vi_above: int | None = None,
     progress: Callable[[str], None] | None = None,
-) -> list[dict[str, float | int]]:
+) -> list[dict[str, float | int | str]]:
     """Benchmark Policy Iteration, Value Iteration, and Backward Induction.
 
     Parameters:
         n_vs: Sequence of wealth grid points n_V.
         T: Finite planning horizon for Backward Induction in years (default: 10).
-        repeats: Repetitions per algorithm for median timing (default: 1).
+        repeats: Repetitions per algorithm for median/min/max timing (default: 3).
         out_dir: Output directory for benchmark artifacts.
         skip_vi_above: If set, skips Value Iteration for n_V > skip_vi_above.
         progress: Optional logging callback.
@@ -52,11 +63,12 @@ def run_benchmark(
     Returns:
         List of benchmark metric dictionaries per grid configuration.
     """
+    _set_benchmark_process_priority()
     os.makedirs(out_dir, exist_ok=True)
     csv_path = os.path.join(out_dir, "benchmark_runtimes.csv")
     png_path = os.path.join(out_dir, "benchmark_runtime.png")
 
-    results: list[dict[str, float | int]] = []
+    results: list[dict[str, float | int | str]] = []
     total_start = time.perf_counter()
 
     def log(msg: str) -> None:
@@ -65,13 +77,14 @@ def run_benchmark(
         print(msg)
 
     log("=" * 85)
-    log(f"RUNTIME BENCHMARK: Policy Iteration vs Value Iteration vs Backward Induction (T={T})")
+    log(f"RUNTIME BENCHMARK: Policy Iteration vs Value Iteration vs Backward Induction (T={T}, repeats={repeats})")
     log("=" * 85)
 
     for n_V in n_vs:
         p = Params(n_V=n_V)
         n_S = p.n_V * p.n_ccr
-        log(f"\n>>> Benchmarking Grid n_V={n_V} (n_S={n_S:,}, actions={p.n_a}, shocks={p.n_z})")
+        solver_path = "spsolve" if n_S <= 6000 else "bicgstab"
+        log(f"\n>>> Benchmarking Grid n_V={n_V} (n_S={n_S:,}, actions={p.n_a}, shocks={p.n_z}, PI solver={solver_path})")
 
         # 1. Measure standalone setup time (Grids + build_next_state)
         setup_times = []
@@ -81,7 +94,7 @@ def run_benchmark(
             _ = build_next_state(g)
             setup_times.append(time.perf_counter() - t0_setup)
         setup_sec = float(np.median(setup_times))
-        log(f"    Setup (Grids + transition tensor): {setup_sec:.3f}s")
+        log(f"    Setup (Grids + transition tensor): median {setup_sec:.3f}s [min {min(setup_times):.3f}s, max {max(setup_times):.3f}s]")
 
         # 2. Benchmark Howard's Policy Iteration
         log(f"    Running Policy Iteration ({repeats} run{'s' if repeats > 1 else ''})...")
@@ -92,8 +105,10 @@ def run_benchmark(
             pi_times.append(sol_pi.seconds)
         assert sol_pi is not None
         pi_sec = float(np.median(pi_times))
+        pi_min = float(np.min(pi_times))
+        pi_max = float(np.max(pi_times))
         pi_iters = sol_pi.iterations
-        log(f"    -> PI: {pi_sec:.3f}s, {pi_iters} iterations")
+        log(f"    -> PI: median {pi_sec:.3f}s [min {pi_min:.3f}s, max {pi_max:.3f}s], {pi_iters} iterations ({solver_path})")
 
         # 3. Benchmark Backward Induction (T=10)
         log(f"    Running Backward Induction T={T} ({repeats} run{'s' if repeats > 1 else ''})...")
@@ -104,15 +119,21 @@ def run_benchmark(
             bi_times.append(sol_bi.seconds)
         assert sol_bi is not None
         bi_sec = float(np.median(bi_times))
+        bi_min = float(np.min(bi_times))
+        bi_max = float(np.max(bi_times))
         bi_stages = T
-        log(f"    -> BI: {bi_sec:.3f}s, {bi_stages} stages")
+        log(f"    -> BI: median {bi_sec:.3f}s [min {bi_min:.3f}s, max {bi_max:.3f}s], {bi_stages} stages")
 
         # 4. Benchmark Value Iteration (if not skipped)
         sol_vi = None
         if skip_vi_above is not None and n_V > skip_vi_above:
             log(f"    Skipping Value Iteration (n_V={n_V} > {skip_vi_above})")
             vi_sec = float("nan")
+            vi_min = float("nan")
+            vi_max = float("nan")
             vi_iters = -1
+            vi_sec_per_iter = float("nan")
+            vi_sec_per_iter_per_s = float("nan")
             pi_vs_vi_pct = float("nan")
             vi_vs_bi_pct = float("nan")
         else:
@@ -123,10 +144,17 @@ def run_benchmark(
                 vi_times.append(sol_vi.seconds)
             assert sol_vi is not None
             vi_sec = float(np.median(vi_times))
+            vi_min = float(np.min(vi_times))
+            vi_max = float(np.max(vi_times))
             vi_iters = sol_vi.iterations
+            vi_sec_per_iter = vi_sec / vi_iters if vi_iters > 0 else float("nan")
+            vi_sec_per_iter_per_s = vi_sec_per_iter / n_S if vi_iters > 0 else float("nan")
             pi_vs_vi_pct = float(np.mean(sol_pi.policy == sol_vi.policy) * 100.0)
             vi_vs_bi_pct = float(np.mean(sol_vi.policy == sol_bi.policy) * 100.0)
-            log(f"    -> VI: {vi_sec:.3f}s, {vi_iters} iterations (PI agreement: {pi_vs_vi_pct:.2f}%)")
+            log(
+                f"    -> VI: median {vi_sec:.3f}s [min {vi_min:.3f}s, max {vi_max:.3f}s], {vi_iters} iterations "
+                f"({vi_sec_per_iter*1000:.2f} ms/iter, {vi_sec_per_iter_per_s*1e6:.4f} us/iter/state, PI agree: {pi_vs_vi_pct:.2f}%)"
+            )
 
         # 5. Evaluate policy agreement
         cmp_pi_bi = compare_policies(sol_bi, sol_pi, ref=sol_pi)
@@ -134,15 +162,24 @@ def run_benchmark(
         pi_vs_bi_equiv = cmp_pi_bi["equivalent_action_pct"]
         log(f"    -> Policy Agreement: PI vs BI year-0 = {pi_vs_bi_pct:.2f}% (equiv = {pi_vs_bi_equiv:.2f}%)")
 
-        row: dict[str, float | int] = {
+        row: dict[str, float | int | str] = {
             "n_V": n_V,
             "n_S": n_S,
             "setup_seconds": setup_sec,
             "PI_seconds": pi_sec,
+            "PI_seconds_min": pi_min,
+            "PI_seconds_max": pi_max,
             "PI_iterations": pi_iters,
+            "PI_solver_path": solver_path,
             "VI_seconds": vi_sec,
+            "VI_seconds_min": vi_min,
+            "VI_seconds_max": vi_max,
             "VI_iterations": vi_iters,
+            "VI_seconds_per_iter": vi_sec_per_iter,
+            "VI_sec_per_iter_per_s": vi_sec_per_iter_per_s,
             "BI_seconds": bi_sec,
+            "BI_seconds_min": bi_min,
+            "BI_seconds_max": bi_max,
             "BI_stages": bi_stages,
             "PI_vs_VI_agreement_pct": pi_vs_vi_pct,
             "PI_vs_BI_year0_agreement_pct": pi_vs_bi_pct,
@@ -160,10 +197,19 @@ def run_benchmark(
         "n_S",
         "setup_seconds",
         "PI_seconds",
+        "PI_seconds_min",
+        "PI_seconds_max",
         "PI_iterations",
+        "PI_solver_path",
         "VI_seconds",
+        "VI_seconds_min",
+        "VI_seconds_max",
         "VI_iterations",
+        "VI_seconds_per_iter",
+        "VI_sec_per_iter_per_s",
         "BI_seconds",
+        "BI_seconds_min",
+        "BI_seconds_max",
         "BI_stages",
         "PI_vs_VI_agreement_pct",
         "PI_vs_BI_year0_agreement_pct",
@@ -185,7 +231,7 @@ def run_benchmark(
 
 
 def plot_benchmark(
-    results: list[dict[str, float | int]],
+    results: list[dict[str, float | int | str]],
     png_path: str = "results/benchmark_runtime.png",
 ) -> None:
     """Generate a 3-panel publication-quality figure from benchmark results."""
@@ -271,12 +317,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--n-vs",
-        type=str,
-        default="100,250,500,1000",
-        help="Comma-separated n_V grid values (default: 100,250,500,1000)",
+        nargs="*",
+        default=["100", "250", "500", "1000"],
+        help="Grid values for n_V as space- or comma-separated list (default: 100 250 500 1000)",
     )
     parser.add_argument("--T", type=int, default=10, help="Backward induction horizon (default: 10)")
-    parser.add_argument("--repeats", type=int, default=1, help="Repetitions for median timing (default: 1)")
+    parser.add_argument("--repeats", type=int, default=3, help="Repetitions for median timing (default: 3)")
     parser.add_argument("--out-dir", type=str, default="results", help="Output directory (default: results)")
     parser.add_argument(
         "--skip-vi-above",
@@ -286,7 +332,13 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    n_vs = [int(v.strip()) for v in args.n_vs.split(",") if v.strip()]
+    # Flatten any comma-separated or space-separated entries
+    n_vs: list[int] = []
+    for item in args.n_vs:
+        for part in str(item).split(","):
+            part_str = part.strip()
+            if part_str:
+                n_vs.append(int(part_str))
 
     run_benchmark(
         n_vs=n_vs,
