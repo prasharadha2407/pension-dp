@@ -55,7 +55,7 @@ def sweep_alpha(
 
         avg_action = float(res.action.mean())
         pol_grid = sol.policy_grid()
-        mean_grid_action = float(pol_grid.mean()) * (p.a_max - p.a_min) / (p.n_a - 1)
+        mean_grid_action = float(pol_grid.mean())
 
         row = {
             "alpha": alpha,
@@ -159,7 +159,7 @@ def sweep_sigma(
 
         avg_action = float(res.action.mean())
         pol_grid = sol.policy_grid()
-        mean_grid_action = float(pol_grid.mean()) * (p.a_max - p.a_min) / (p.n_a - 1)
+        mean_grid_action = float(pol_grid.mean())
 
         row = {
             "sigma": sigma,
@@ -261,7 +261,7 @@ def sweep_mu(
 
         avg_action = float(res.action.mean())
         pol_grid = sol.policy_grid()
-        mean_grid_action = float(pol_grid.mean()) * (p.a_max - p.a_min) / (p.n_a - 1)
+        mean_grid_action = float(pol_grid.mean())
 
         row = {
             "mu": mu,
