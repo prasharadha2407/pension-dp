@@ -97,7 +97,7 @@ class App:
         for text, cmd in [("1  Solve (policy iteration)", self.on_solve),
                           ("2  Simulate fund (optimal vs constant mixes)", self.on_simulate),
                           ("3  Compare buffer alpha = 0 / 0.2 / 0.4", self.on_compare),
-                          ("4  Benchmark: policy vs value iteration", self.on_benchmark),
+                          ("4  Benchmark: PI vs VI vs Backward Induction", self.on_benchmark),
                           ("Run everything", self.on_all),
                           ("Export results...", self.on_export)]:
             b = ttk.Button(left, text=text, command=cmd); b.pack(fill="x", pady=2); self.buttons.append(b)
