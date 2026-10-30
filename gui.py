@@ -19,19 +19,47 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 from pension_core import Params, policy_iteration, value_iteration, simulate, metrics
+from backward_induction import backward_induction
 import gui_plots as gp
 
 # Reference numbers quoted in the project README for paper Tables 1/2 (10,000 paths, 10 years).
 PAPER_REF = {
-    0.0: {"P(>=1 pension cut)": .407, "P(#enh >= #cuts)": .706, "Rel. pension mean (T)": 1.139,
-          "Rel. pension std (T)": .228, "Rel. pension VaR 5%": .817, "Rel. pension VaR 1%": .697,
-          "Rel. wealth mean (T)": .945, "Initial pension P0": 277.33},
-    0.2: {"P(>=1 pension cut)": .354, "P(#enh >= #cuts)": .732, "Rel. pension mean (T)": 1.128,
-          "Rel. pension std (T)": .207, "Rel. pension VaR 5%": .841,
-          "Rel. wealth mean (T)": .957, "Initial pension P0": 269.84},
-    0.4: {"P(>=1 pension cut)": .282, "P(#enh >= #cuts)": .771, "Rel. pension mean (T)": 1.111,
-          "Rel. pension VaR 5%": .873, "Rel. pension VaR 1%": .776,
-          "Rel. wealth mean (T)": .976, "Initial pension P0": 258.21},
+    0.0: {
+        "Initial pension P0": 277,
+        "P(>=1 pension cut)": 0.495,
+        "P(#enh >= #cuts)": 0.844,
+        "P(avg pension > P0)": 0.741,
+        "Rel. pension mean (T)": 1.075,
+        "Rel. pension std (T)": 0.181,
+        "Rel. pension VaR 5%": 0.833,
+        "Rel. pension VaR 1%": 0.719,
+        "Rel. wealth mean (T)": 0.966,
+        "Rel. wealth std (T)": 0.157,
+    },
+    0.2: {
+        "Initial pension P0": 270,
+        "P(>=1 pension cut)": 0.364,
+        "P(#enh >= #cuts)": 0.913,
+        "P(avg pension > P0)": 0.808,
+        "Rel. pension mean (T)": 1.084,
+        "Rel. pension std (T)": 0.168,
+        "Rel. pension VaR 5%": 0.848,
+        "Rel. pension VaR 1%": 0.751,
+        "Rel. wealth mean (T)": 0.962,
+        "Rel. wealth std (T)": 0.143,
+    },
+    0.4: {
+        "Initial pension P0": 258,
+        "P(>=1 pension cut)": 0.255,
+        "P(#enh >= #cuts)": 0.968,
+        "P(avg pension > P0)": 0.861,
+        "Rel. pension mean (T)": 1.109,
+        "Rel. pension std (T)": 0.170,
+        "Rel. pension VaR 5%": 0.865,
+        "Rel. pension VaR 1%": 0.770,
+        "Rel. wealth mean (T)": 0.965,
+        "Rel. wealth std (T)": 0.146,
+    },
 }
 
 FIELDS = [  # key, label, default
@@ -96,7 +124,7 @@ class App:
         for text, cmd in [("1  Solve (policy iteration)", self.on_solve),
                           ("2  Simulate fund (optimal vs constant mixes)", self.on_simulate),
                           ("3  Compare buffer alpha = 0 / 0.2 / 0.4", self.on_compare),
-                          ("4  Benchmark: policy vs value iteration", self.on_benchmark),
+                          ("4  Benchmark: PI vs VI vs Backward Induction", self.on_benchmark),
                           ("Run everything", self.on_all),
                           ("Export results...", self.on_export)]:
             b = ttk.Button(left, text=text, command=cmd); b.pack(fill="x", pady=2); self.buttons.append(b)
@@ -123,7 +151,8 @@ class App:
         self.tree = ttk.Treeview(tab, show="headings"); self.tree.pack(fill="both", expand=True)
         note = ttk.Label(tab, foreground="#555", wraplength=900, text=(
             "'paper' columns are the reference values quoted in the project README for Tables 1/2. "
-            "Differences are expected: see the README's note on the lambda discrepancy."))
+            "Differences are expected: see the README's note on the lambda discrepancy; "
+            "paper values may pool over years; ours are terminal year t=10 (hypothesis, not verified)."))
         note.pack(anchor="w", padx=6, pady=4)
         logf = ttk.Frame(self.nb); self.nb.add(logf, text="Log")
         self.logbox = tk.Text(logf, height=10, state="disabled", wrap="word"); self.logbox.pack(fill="both", expand=True)
@@ -298,22 +327,38 @@ class App:
     def on_benchmark(self, then=None):
         try:
             p = self.params()
+            try:
+                T = int(self.horizon.get())
+            except (ValueError, AttributeError):
+                T = 10
+            if T <= 0:
+                T = 10
         except Exception as e:
             return messagebox.showerror("Invalid input", str(e))
 
         def work():
             pi = policy_iteration(p, progress=self._progress)
             vi = value_iteration(p, progress=self._progress)
-            return pi, vi
+            bi = backward_induction(p, T=T, progress=self._progress)
+            return pi, vi, bi
 
         def done(out):
-            pi, vi = out
-            gp.draw_benchmark(self.t_bench[0], pi, vi); self._show(self.t_bench)
-            self.log(f"PI: {pi.iterations} iters, {pi.seconds:.2f}s | VI: {vi.iterations} iters, {vi.seconds:.2f}s | "
-                     f"speed-up {vi.seconds / pi.seconds:.1f}x | policy agreement {(pi.policy == vi.policy).mean() * 100:.2f}%")
+            pi, vi, bi = out
+            gp.draw_benchmark(self.t_bench[0], pi, vi, bi); self._show(self.t_bench)
+            speed_vi_pi = vi.seconds / max(pi.seconds, 1e-9)
+            speed_vi_bi = vi.seconds / max(bi.seconds, 1e-9)
+            agree_vi = (pi.policy == vi.policy).mean() * 100
+            agree_bi = (pi.policy == bi.policy).mean() * 100
+            self.log(
+                f"PI: {pi.iterations} iters, {pi.seconds:.2f}s | "
+                f"VI: {vi.iterations} iters, {vi.seconds:.2f}s | "
+                f"BI (T={T}): {bi.iterations} stages, {bi.seconds:.2f}s | "
+                f"Speed-up VI/PI {speed_vi_pi:.1f}x, VI/BI {speed_vi_bi:.1f}x | "
+                f"Policy agreement PI vs VI: {agree_vi:.2f}%, PI vs BI yr-0: {agree_bi:.2f}%"
+            )
             self.nb.select(4)
             if callable(then): then()
-        self.run_async(work, done, "Benchmarking policy vs value iteration...")
+        self.run_async(work, done, "Benchmarking PI vs VI vs Backward Induction...")
 
     def on_all(self):
         def step4(): self.on_benchmark()
