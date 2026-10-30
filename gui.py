@@ -19,6 +19,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 from pension_core import Params, policy_iteration, value_iteration, simulate, metrics
+from backward_induction import backward_induction
 import gui_plots as gp
 
 # Reference numbers quoted in the project README for paper Tables 1/2 (10,000 paths, 10 years).
@@ -298,22 +299,38 @@ class App:
     def on_benchmark(self, then=None):
         try:
             p = self.params()
+            try:
+                T = int(self.horizon.get())
+            except (ValueError, AttributeError):
+                T = 10
+            if T <= 0:
+                T = 10
         except Exception as e:
             return messagebox.showerror("Invalid input", str(e))
 
         def work():
             pi = policy_iteration(p, progress=self._progress)
             vi = value_iteration(p, progress=self._progress)
-            return pi, vi
+            bi = backward_induction(p, T=T, progress=self._progress)
+            return pi, vi, bi
 
         def done(out):
-            pi, vi = out
-            gp.draw_benchmark(self.t_bench[0], pi, vi); self._show(self.t_bench)
-            self.log(f"PI: {pi.iterations} iters, {pi.seconds:.2f}s | VI: {vi.iterations} iters, {vi.seconds:.2f}s | "
-                     f"speed-up {vi.seconds / pi.seconds:.1f}x | policy agreement {(pi.policy == vi.policy).mean() * 100:.2f}%")
+            pi, vi, bi = out
+            gp.draw_benchmark(self.t_bench[0], pi, vi, bi); self._show(self.t_bench)
+            speed_vi_pi = vi.seconds / max(pi.seconds, 1e-9)
+            speed_vi_bi = vi.seconds / max(bi.seconds, 1e-9)
+            agree_vi = (pi.policy == vi.policy).mean() * 100
+            agree_bi = (pi.policy == bi.policy).mean() * 100
+            self.log(
+                f"PI: {pi.iterations} iters, {pi.seconds:.2f}s | "
+                f"VI: {vi.iterations} iters, {vi.seconds:.2f}s | "
+                f"BI (T={T}): {bi.iterations} stages, {bi.seconds:.2f}s | "
+                f"Speed-up VI/PI {speed_vi_pi:.1f}x, VI/BI {speed_vi_bi:.1f}x | "
+                f"Policy agreement PI vs VI: {agree_vi:.2f}%, PI vs BI yr-0: {agree_bi:.2f}%"
+            )
             self.nb.select(4)
             if callable(then): then()
-        self.run_async(work, done, "Benchmarking policy vs value iteration...")
+        self.run_async(work, done, "Benchmarking PI vs VI vs Backward Induction...")
 
     def on_all(self):
         def step4(): self.on_benchmark()
