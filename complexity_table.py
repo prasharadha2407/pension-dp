@@ -25,7 +25,7 @@ from pension_core import Params
 def generate_complexity_data(
     p: Params | None = None,
     benchmark_csv: str = "results/benchmark_runtimes.csv",
-) -> list[dict[str, str]]:
+) -> tuple[list[dict[str, str]], float]:
     """Compute concrete complexity numbers and comparative analysis.
 
     Parameters:
@@ -33,7 +33,7 @@ def generate_complexity_data(
         benchmark_csv: Path to empirical benchmark runtimes CSV.
 
     Returns:
-        List of dictionaries with complexity specifications.
+        Tuple of (list of complexity dictionaries, transition tensor MiB).
     """
     if p is None:
         p = Params()
@@ -55,6 +55,9 @@ def generate_complexity_data(
     # 3. Read empirical benchmark iterations if available
     vi_measured_iters = 365
     pi_measured_iters = 7
+    vi_runtime_str = "~197s"
+    pi_runtime_str = "~14.0s"
+    bi_runtime_str = "~9.3s"
     if os.path.exists(benchmark_csv):
         try:
             df = pd.read_csv(benchmark_csv)
@@ -62,6 +65,12 @@ def generate_complexity_data(
             if not row_1000.empty:
                 vi_measured_iters = int(row_1000["VI_iterations"].iloc[0])
                 pi_measured_iters = int(row_1000["PI_iterations"].iloc[0])
+                if "VI_seconds" in row_1000:
+                    vi_runtime_str = f"{float(row_1000['VI_seconds'].iloc[0]):.1f}s"
+                if "PI_seconds" in row_1000:
+                    pi_runtime_str = f"{float(row_1000['PI_seconds'].iloc[0]):.1f}s"
+                if "BI_seconds" in row_1000:
+                    bi_runtime_str = f"{float(row_1000['BI_seconds'].iloc[0]):.1f}s"
         except Exception:
             pass
 
@@ -87,7 +96,8 @@ def generate_complexity_data(
 
     # 6. Shared memory footprint
     trans_bytes = n_S * n_a * n_z * 4  # int32
-    trans_mb = trans_bytes / (1024 * 1024)
+    trans_mib = trans_bytes / (1024 * 1024)
+    trans_mb = trans_bytes / 1e6
 
     rows: list[dict[str, str]] = [
         {
@@ -106,8 +116,8 @@ def generate_complexity_data(
             "Space complexity": "O(T * n_S) [or O(n_S) for year-0 only]",
             "Concrete operation count (n_S=26000, n_a=21, n_z=40, T=10)": bi_ops_str,
             "Notes": (
-                "Feasible for finite planning horizon T. Exact dynamic programming recursion. "
-                "Completes in ~3.2s on 26,000 states."
+                f"Feasible for finite planning horizon T. Exact dynamic programming recursion. "
+                f"Completes in {bi_runtime_str} on 26,000 states."
             ),
         },
         {
@@ -117,7 +127,7 @@ def generate_complexity_data(
             "Concrete operation count (n_S=26000, n_a=21, n_z=40, T=10)": vi_ops_str,
             "Notes": (
                 f"Geometric contraction (gamma={gamma:.4f} < 1). Banach fixed point. "
-                f"Converges in {vi_measured_iters} iterations (~68s on 26,000 states)."
+                f"Converges in {vi_measured_iters} iterations ({vi_runtime_str} on 26,000 states)."
             ),
         },
         {
@@ -127,23 +137,25 @@ def generate_complexity_data(
             "Concrete operation count (n_S=26000, n_a=21, n_z=40, T=10)": pi_ops_str,
             "Notes": (
                 f"Exact infinite-horizon optimum (Theorem 5). Converges in K={pi_measured_iters} "
-                f"iterations (~4.3s on 26,000 states). BiCGSTAB solve is <0.2s per iteration. 16x faster than VI."
+                f"iterations ({pi_runtime_str} on 26,000 states). Speedup over VI is ~14x, driven primarily "
+                f"by needing only K=7 iterations versus VI's M=365 iterations."
             ),
         },
     ]
 
-    return rows, trans_mb
+    return rows, trans_mib
 
 
 def write_complexity_artifacts(
     rows: list[dict[str, str]],
-    trans_mb: float,
+    trans_mib: float,
     out_dir: str = "results",
 ) -> tuple[str, str]:
     """Write CSV and Markdown representations of the complexity table."""
     os.makedirs(out_dir, exist_ok=True)
     csv_path = os.path.join(out_dir, "complexity_table.csv")
     md_path = os.path.join(out_dir, "complexity_table.md")
+    trans_mb = trans_mib * (1024 * 1024) / 1e6
 
     fieldnames = [
         "Algorithm",
@@ -174,7 +186,7 @@ def write_complexity_artifacts(
     md_lines.extend([
         "",
         f"> **Shared Preprocessing Memory**: The discrete transition tensor `next_state[s, a, z]` is of shape `(26000, 21, 40)` "
-        f"with dtype `int32`, requiring **{trans_mb:.2f} MB** of memory. This represents the dominant working memory allocation "
+        f"with dtype `int32`, requiring **{trans_mib:.2f} MiB ({trans_mb:.2f} MB)** of memory. This represents the dominant working memory allocation "
         f"shared across all three dynamic programming algorithms (Backward Induction, Value Iteration, and Policy Iteration).",
         "",
     ])
@@ -187,8 +199,8 @@ def write_complexity_artifacts(
 
 def main() -> None:
     """Generate and display the complexity comparison table."""
-    rows, trans_mb = generate_complexity_data()
-    csv_path, md_path = write_complexity_artifacts(rows, trans_mb)
+    rows, trans_mib = generate_complexity_data()
+    csv_path, md_path = write_complexity_artifacts(rows, trans_mib)
 
     print("=" * 100)
     print("ALGORITHMIC COMPLEXITY COMPARISON TABLE")
@@ -200,7 +212,8 @@ def main() -> None:
         print(f"  - Operation Count:  {r['Concrete operation count (n_S=26000, n_a=21, n_z=40, T=10)']}")
         print(f"  - Analysis Notes:   {r['Notes']}")
     print("-" * 100)
-    print(f"Shared transition tensor memory: {trans_mb:.2f} MB")
+    trans_mb = trans_mib * (1024 * 1024) / 1e6
+    print(f"Shared transition tensor memory: {trans_mib:.2f} MiB ({trans_mb:.2f} MB)")
     print(f"Saved CSV table to: {csv_path}")
     print(f"Saved Markdown table to: {md_path}")
     print("=" * 100)
