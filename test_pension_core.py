@@ -141,3 +141,42 @@ def test_compare_policies_identical():
     assert cmp_res["equivalent_action_pct"] == 100.0
     assert cmp_res["mean_abs_action_diff"] == 0.0
 
+
+
+def test_benchmark_algorithms_smoke(tmp_path):
+    from benchmark_algorithms import run_benchmark
+    res = run_benchmark(n_vs=(30,), T=2, repeats=1, out_dir=str(tmp_path))
+    assert len(res) == 1
+    assert (tmp_path / "benchmark_runtimes.csv").exists()
+    assert (tmp_path / "benchmark_runtime.png").exists()
+    assert (tmp_path / "benchmark_runtime.png").stat().st_size > 0
+
+
+def test_complexity_table_smoke():
+    from complexity_table import generate_complexity_data
+    rows, trans_mb = generate_complexity_data()
+    assert len(rows) == 4
+    assert trans_mb > 0
+    brute = next(r for r in rows if "Brute" in r["Algorithm"])
+    val = [v for k, v in brute.items() if "Concrete" in k][0]
+    assert "10^34,378" in val
+
+
+def test_draw_benchmark_headless_smoke(tmp_path):
+    import matplotlib
+    matplotlib.use("Agg")
+    from matplotlib.figure import Figure
+    from backward_induction import backward_induction
+    import gui_plots as gp
+
+    p = Params(n_V=30)
+    pi = policy_iteration(p)
+    vi = value_iteration(p, max_iter=15)
+    bi = backward_induction(p, T=3)
+
+    fig = Figure(figsize=(9, 6))
+    gp.draw_benchmark(fig, pi, vi, bi)
+    out_file = tmp_path / "bench_headless.png"
+    fig.savefig(out_file)
+    assert out_file.exists()
+    assert out_file.stat().st_size > 0
