@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pension Planner - Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#FAF7EE;--card:#FFFEFA;--line:#DDE5D5;--ink:#1C2B24;--mute:#66756C;--g:#1B4D3E;--gl:#E7EEE0;--o:#C98B3C;--pu:#7C9A86;--bl:#3E7C7B;--red:#B3402F;--fs:17px;
+--sh:0 1px 2px rgba(27,77,62,.06),0 10px 28px -14px rgba(27,77,62,.22);--shh:0 2px 4px rgba(27,77,62,.08),0 18px 36px -14px rgba(27,77,62,.30)}
+*{box-sizing:border-box}html{font-size:var(--fs);scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1200px 500px at 85% -10%,#F1F5E8 0,transparent 60%),var(--bg);color:var(--ink);font-family:"DM Sans",Verdana,sans-serif;line-height:1.55;display:grid;grid-template-columns:240px 1fr;min-height:100vh;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.logo,.sv,.go,.badge{font-family:"Space Grotesk","DM Sans",sans-serif;margin:0;font-variant-numeric:tabular-nums}
+aside{border-right:1px solid var(--line);padding:1.2rem .9rem;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:.6rem;background:var(--card)}
+.logo{font-size:1.15rem;font-weight:700;display:flex;gap:.6rem;align-items:center;letter-spacing:-.01em}
+.logo i{width:28px;height:28px;border-radius:9px;background:linear-gradient(145deg,#2A6B56,var(--g));display:inline-block;box-shadow:0 4px 10px -4px rgba(27,77,62,.6)}
+.prof{border:1px solid var(--line);border-radius:14px;padding:.75rem .85rem;font-size:.86rem;background:var(--gl);color:var(--mute)}.prof b{color:var(--ink);font-family:"Space Grotesk",sans-serif}
+nav{margin-top:.3rem}
+nav a{display:block;padding:.5rem .8rem;border-radius:12px;border:1px solid transparent;color:var(--mute);text-decoration:none;font-weight:500;margin-top:.2rem;transition:background .2s,color .2s,transform .2s}
+nav a.on{background:var(--gl);border-color:#CBD9C2;color:var(--g);font-weight:700}nav a:hover{background:var(--gl);color:var(--g);transform:translateX(2px)}
+.sp1{flex:1}.sbtn{border:1px solid var(--line);background:#fff;border-radius:10px;font:inherit;font-size:.88rem;padding:.25rem .7rem;cursor:pointer;color:var(--ink);transition:box-shadow .2s,transform .2s,border-color .2s}
+.sbtn:hover{border-color:var(--pu);box-shadow:var(--sh);transform:translateY(-1px)}
+main{padding:1.3rem 2rem 2.4rem;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:1rem;color:var(--mute);font-size:.9rem}
+.pill{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:.45rem 1.1rem;min-width:260px;text-align:center;box-shadow:var(--sh)}
+h1{font-size:2.15rem;font-weight:700;margin:1.2rem 0 .15rem;letter-spacing:-.02em;color:var(--g)}
+.sub{color:var(--mute);margin:0 0 1.3rem}
+.card{border:1px solid var(--line);border-radius:18px;background:var(--card);padding:1.25rem;min-width:0;box-shadow:var(--sh);transition:box-shadow .25s,transform .25s,border-color .25s}
+.card:hover{box-shadow:var(--shh);transform:translateY(-2px);border-color:#C7D6BD}
+.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1.2rem;align-items:end}
+label{display:block;font-weight:700;font-size:.9rem;margin-bottom:.25rem}.hint{font-size:.82rem;color:var(--mute);margin:.3rem 0 0}
+input[type=number],select{width:100%;font:inherit;padding:.55rem .65rem;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);transition:border-color .2s,box-shadow .2s}
+input[type=number]:hover,select:hover{border-color:var(--pu)}input[type=number]:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(27,77,62,.14);outline:none}
+input[type=range]{width:100%;accent-color:var(--g)}
+.val{background:var(--gl);color:var(--g);border-radius:8px;padding:.05rem .5rem;font-weight:700;font-family:"Space Grotesk",sans-serif}
+.go{font-size:1.02rem;font-weight:600;padding:.75rem 1.3rem;border:0;border-radius:12px;background:var(--g);color:#fff;cursor:pointer;height:fit-content;box-shadow:0 8px 18px -8px rgba(27,77,62,.6);transition:transform .2s,box-shadow .2s,background .2s}
+.go:hover{background:#143B30;transform:translateY(-2px);box-shadow:0 12px 22px -8px rgba(27,77,62,.65)}.go:active{transform:translateY(0)}.go:disabled{background:#9DB3A5;cursor:wait;box-shadow:none;transform:none}
+:focus-visible{outline:3px solid var(--o);outline-offset:2px;border-radius:8px}
+details{margin-top:.9rem}summary{cursor:pointer;font-weight:700;color:var(--g)}
+.exp{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.9rem;margin-top:.7rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1.2rem;margin:1.2rem 0}
+.stats .card{position:relative;overflow:hidden;padding-top:1.4rem}
+.stats .card::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--g)}
+.stats .card:nth-child(2)::before{background:var(--o)}.stats .card:nth-child(3)::before{background:var(--pu)}.stats .card:nth-child(4)::before{background:var(--bl)}
+.sh{display:flex;gap:.55rem;align-items:center;font-size:.88rem;color:var(--mute);font-weight:500}.sh i{width:10px;height:10px;border-radius:50%}
+.sv{font-size:2.45rem;font-weight:700;line-height:1.1;margin:.35rem 0;letter-spacing:-.025em;color:var(--ink)}
+.chip{display:inline-block;background:var(--gl);color:var(--g);border-radius:999px;font-size:.78rem;font-weight:700;padding:.15rem .7rem}
+canvas{width:100%;display:block}.spk{height:46px;margin-top:.7rem}.cv{height:280px;margin-top:.6rem}.cv2{height:245px;margin-top:.6rem}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:1.2rem;margin-top:1.2rem}
+.hd{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap}.hd .sv{font-size:2rem}
+h3{font-size:1.08rem;font-weight:600;letter-spacing:-.01em}.big{display:flex;gap:2.2rem;flex-wrap:wrap}.big small{color:var(--mute);display:block;font-size:.8rem;font-weight:500}
+.sel{border:1px solid var(--line);border-radius:999px;padding:.3rem 1rem;background:var(--gl);color:var(--g);font-size:.85rem;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:.6rem .55rem;text-align:left}th{color:var(--mute);font-weight:500;font-size:.85rem}
+td:not(:first-child){font-variant-numeric:tabular-nums}tr:hover td{background:rgba(231,238,224,.55)}tr:last-child td{border-bottom:0}
+#msg{color:var(--mute)}.err{color:var(--red)!important}
+.dashed{border:1px dashed #BFCDB6;border-radius:18px;padding:1.1rem;color:var(--mute);background:rgba(231,238,224,.25);transition:background .2s}
+details.dashed:hover{background:rgba(231,238,224,.6)}
+.gl{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
+.badge{display:inline-block;border-radius:999px;padding:.25rem 1rem;font-size:.95rem;font-weight:700;color:#fff;letter-spacing:.01em}.b-g{background:var(--g)}.b-a{background:#B7791F}.b-r{background:var(--red)}
+.adv li{margin:.55rem 0}.adv{padding-left:1.2rem}
+@media(max-width:900px){body{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center}.prof,.sp1{display:none}.pill{min-width:0}main{padding:1rem}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}.card:hover,.go:hover,nav a:hover{transform:none}}
+@media print{aside,.go,.sbtn{display:none}body{display:block;background:#fff}.card{box-shadow:none}}
+</style></head><body>
+<aside><div class="logo"><i></i>Pension Planner</div>
+<div class="prof"><b>Your retirement plan</b><br><span id="pf">Set your plan, then press Run.</span></div>
+<nav><a href="#overview" class="on">Overview</a><a href="#results">Results &amp; advice</a><a href="#strategies">Strategies</a><a href="#scenarios">Market stories</a><a href="#riskmap">Risk map</a><a href="#cushions">Safety cushions</a><a href="#learn">How it works</a></nav>
+<div class="sp1"></div><div>Text size <button class="sbtn" id="sm" aria-label="Smaller text">A-</button> <button class="sbtn" id="bg" aria-label="Bigger text">A+</button></div>
+<button class="sbtn" onclick="print()">Print this page</button></aside>
+<main id="overview">
+<div class="top"><span>Pension Planner / <b style="color:var(--ink)">Overview</b></span><span class="pill" id="msg" role="status" aria-live="polite">Ready. Set your plan and press Run.</span><span></span></div>
+<h1>Pension overview</h1><p class="sub" id="dt"></p>
+<section class="card" aria-label="Your plan"><div class="plan">
+<div><label for="V0">Savings pot today</label><input type="number" id="V0" value="10000" min="2000" max="50000" step="500"><p class="hint">Allowed: 2,000 to 50,000.</p></div>
+<div><label for="alpha">Safety cushion <span class="val" id="aOut">20%</span></label><input type="range" id="alpha" min="0" max="0.5" step="0.05" value="0.2"><p class="hint">Extra money held back in good years to soften bad years.</p></div>
+<div><label for="T">Years ahead <span class="val" id="tOut">10</span></label><input type="range" id="T" min="5" max="20" step="1" value="10"></div>
+<button class="go" id="run">&#9654; Run my plan</button></div>
+<details><summary>Expert settings</summary><div class="exp">
+<div><label for="lam">Life-expectancy setting</label><select id="lam"><option value="0.0212">Paper-calibrated</option><option value="0.0118">As printed in paper</option></select></div>
+<div><label for="mu">Stock return per year</label><input type="number" id="mu" value="0.0297" step="0.005"></div>
+<div><label for="sigma">Stock volatility</label><input type="number" id="sigma" value="0.1175" step="0.005"></div>
+<div><label for="r">Safe interest rate</label><input type="number" id="r" value="0.01" step="0.005"></div>
+<div><label for="n_V">Detail level</label><select id="n_V"><option value="1000" selected>Accurate (about 10 s)</option><option value="500">Balanced</option><option value="100">Quick preview (less accurate)</option></select></div></div></details></section>
+<div class="dashed" id="empty" style="margin-top:1rem">Press <b>Run my plan</b>. Charts, comparisons and a plain-language summary appear here.</div>
+<div id="out" hidden>
+<section class="card" id="results" style="margin-top:1rem;border-color:var(--g);border-width:2px"><div class="hd"><h3>Results &amp; advice</h3><span class="badge" id="rate"></span></div><p id="verdict" style="font-size:1.05rem;margin:.6rem 0"></p><b>What the model suggests you do</b><ul class="adv" id="adv"></ul><p class="hint" id="why"></p><p class="hint"><b>Not personal financial advice.</b> This is what a research-paper model suggests under its assumptions. Talk to a licensed adviser before changing real savings.</p></section>
+<div class="stats">
+<div class="card"><div class="sh"><i style="background:var(--g)"></i>Chance of a pension cut</div><div class="sv" id="k1"></div><span class="chip" id="k1c"></span><canvas class="spk" id="s1"></canvas></div>
+<div class="card"><div class="sh"><i style="background:var(--o)"></i>Typical pension at the end</div><div class="sv" id="k2"></div><span class="chip" id="k2c"></span><canvas class="spk" id="s2"></canvas></div>
+<div class="card"><div class="sh"><i style="background:var(--pu)"></i>Bad-luck pension</div><div class="sv" id="k3"></div><span class="chip" id="k3c"></span><canvas class="spk" id="s3"></canvas></div>
+<div class="card"><div class="sh"><i style="background:var(--bl)"></i>Stocks today</div><div class="sv" id="k4"></div><span class="chip" id="k4c"></span><canvas class="spk" id="s4"></canvas></div></div>
+<section class="card"><div class="hd"><div class="big"><div><small>Typical pension</small><span class="sv" id="b1"></span></div><div><small>Bad-luck pension</small><span class="sv" id="b2"></span></div></div><span class="sel" id="yrs"></span></div>
+<canvas class="cv" id="c1" role="img" aria-label="Pension over time"></canvas><p class="hint" id="t1"></p></section>
+<div class="row"><section class="card"><h3>Fund money over time</h3><canvas class="cv2" id="c2" role="img" aria-label="Fund wealth"></canvas><p class="hint" id="t2"></p></section>
+<section class="card" id="riskmap"><h3>When does the fund take risk?</h3><canvas class="cv2" id="c5" role="img" aria-label="Stock share map"></canvas><p class="hint">Dark green = more stocks. Left to right: less to more fund money. Bottom to top: coverage 100% to 125%.</p></section></div>
+<div class="row"><section class="card" id="scenarios"><h3>What if markets boom or crash?</h3><canvas class="cv2" id="c4" role="img" aria-label="Market stories"></canvas><p class="hint">Pension (100% = today) in three made-up stories: growth, steady losses, ups and downs.</p></section>
+<section class="card"><h3>Stock share by coverage</h3><canvas class="cv2" id="c3" role="img" aria-label="Stock share by coverage"></canvas><p class="hint" id="t3"></p></section></div>
+<section class="card" id="strategies" style="margin-top:1rem"><h3>Compare strategies</h3><div style="overflow-x:auto"><table id="cmp"></table></div><p class="hint">Playing safe avoids cuts, but the pension stays flat. More stocks allow growth at a higher chance of a cut. "Our plan" adjusts the mix each year to balance both.</p></section>
+<section class="card" id="cushions" style="margin-top:1rem"><div class="hd"><h3>Compare safety cushions</h3><button class="go" id="cmpBtn">Compare 0 / 20 / 40%</button></div><p class="hint">Sets our results beside the numbers quoted from the research paper. Takes about 15 seconds.</p><div style="overflow-x:auto"><table id="cmpA"></table></div><p class="hint" id="cmpN"></p></section>
+<section class="dashed" id="tech" style="margin-top:1rem"></section>
+<p><button class="sbtn" id="csv">Download results (CSV)</button></p></div>
+<section id="learn" style="margin-top:1.2rem"><h3 style="margin-bottom:.6rem">How it works</h3><div class="gl">
+<details class="dashed"><summary>What is a pension cut?</summary><p>If the fund holds too little money to keep paying everyone, the rules make it lower the pension for all members. This tool counts how often that happens.</p></details>
+<details class="dashed"><summary>What is coverage (CCR)?</summary><p>The fund's money divided by what it owes in future pensions. The rules want it between 100% and 125%. Below 100% pensions are cut. Above 125% they are raised.</p></details>
+<details class="dashed"><summary>What do the shaded bands mean?</summary><p>Dark band: the middle half of outcomes. Light band: 9 in 10 outcomes. Solid line: typical case. Dashed orange line: average.</p></details>
+<details class="dashed"><summary>Is this financial advice?</summary><p>No. It is a study model based on a research paper. Results depend on model assumptions and the detail level chosen.</p></details></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id),pc=x=>Math.round(x*100),G='#1B4D3E';
+let fs=17;const setFs=d=>{fs=Math.max(14,Math.min(24,fs+d));document.documentElement.style.setProperty('--fs',fs+'px');redraw()};
+$('sm').onclick=()=>setFs(-2);$('bg').onclick=()=>setFs(2);
+$('alpha').oninput=e=>$('aOut').textContent=pc(e.target.value)+'%';$('T').oninput=e=>$('tOut').textContent=e.target.value;
+$('dt').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' - snapshot across 5,000 simulated futures';
+document.querySelectorAll('nav a').forEach(a=>a.onclick=()=>{document.querySelectorAll('nav a').forEach(x=>x.classList.remove('on'));a.classList.add('on')});
+let last=null;const getBody=()=>{const b={};['V0','alpha','T','lam','mu','sigma','r','n_V'].forEach(k=>b[k]=$(k).value);return b};
+function cv(id){const c=$(id),k=2;c.width=c.clientWidth*k;c.height=c.clientHeight*k;const x=c.getContext('2d');x.font=`${11*k}px DM Sans,sans-serif`;x.lineJoin='round';x.lineCap='round';x.clearRect(0,0,c.width,c.height);return[x,c.width,c.height,k]}
+function spark(id,a,col){const[x,W,H,k]=cv(id),lo=Math.min(...a),r=(Math.max(...a)-lo)||1;x.beginPath();a.forEach((v,i)=>x[i?'lineTo':'moveTo'](W*i/(a.length-1),H-4*k-(H-8*k)*(v-lo)/r));x.strokeStyle=col;x.lineWidth=2*k;x.stroke();x.lineTo(W,H);x.lineTo(0,H);x.closePath();x.fillStyle=col+'22';x.fill()}
+function fan(id,d,pct,ref){const[x,W,H,k]=cv(id),m={l:36*k,r:14,t:12,b:17*k},n=d[2].length;let lo=Math.min(...d[0]),hi=Math.max(...d[4]);const pad=(hi-lo)*.08||.05;lo-=pad;hi+=pad;
+ const X=i=>m.l+(W-m.l-m.r)*i/(n-1),Y=v=>H-m.b-(H-m.t-m.b)*(v-lo)/(hi-lo);x.fillStyle='#66756C';x.strokeStyle='#E8EEE1';x.lineWidth=k;
+ for(let g=0;g<=4;g++){const v=lo+(hi-lo)*g/4,y=Y(v);x.beginPath();x.moveTo(m.l,y);x.lineTo(W-m.r,y);x.stroke();x.fillText(pct?pc(v)+'%':v.toFixed(2),4,y+4*k)}
+ for(let i=0;i<n;i+=Math.ceil(n/8))x.fillText(i,X(i)-4*k,H-4*k);
+ const band=(a,b,col)=>{x.beginPath();for(let i=0;i<n;i++)x[i?'lineTo':'moveTo'](X(i),Y(d[b][i]));for(let i=n-1;i>=0;i--)x.lineTo(X(i),Y(d[a][i]));x.closePath();x.fillStyle=col;x.fill()};
+ band(0,4,'rgba(27,77,62,.10)');band(1,3,'rgba(27,77,62,.20)');
+ if(ref!=null){x.strokeStyle='#9aa89c';x.lineWidth=k;x.setLineDash([5*k,5*k]);x.beginPath();x.moveTo(m.l,Y(ref));x.lineTo(W-m.r,Y(ref));x.stroke()}
+ const ln=(a,w,c,dash)=>{x.setLineDash(dash||[]);x.lineWidth=w*k;x.strokeStyle=c;x.beginPath();a.forEach((v,i)=>x[i?'lineTo':'moveTo'](X(i),Y(v)));x.stroke()};ln(d[2],3.2,G);ln(d[5],2,'#C98B3C',[3*k,4*k]);x.setLineDash([]);x.beginPath();x.arc(X(n-1),Y(d[2][n-1]),4.5*k,0,7);x.fillStyle=G;x.fill();x.lineWidth=2*k;x.strokeStyle='#fff';x.stroke()}
+function line(id,xs,ys){const[x,W,H,k]=cv(id),L=36*k,B=20*k,X=v=>L+(W-L-14)*(v-xs[0])/(xs[xs.length-1]-xs[0]),Y=v=>H-B-(H-B-10)*v;x.strokeStyle='#E8EEE1';x.fillStyle='#66756C';x.lineWidth=k;
+ for(let g=0;g<=4;g++){const y=Y(g/4);x.beginPath();x.moveTo(L,y);x.lineTo(W-14,y);x.stroke();x.fillText(g*25+'%',4,y+4*k)}
+ [100,110,125].forEach(v=>x.fillText(v+'%',X(v)-8*k,H-4*k));x.strokeStyle=G;x.lineWidth=3*k;x.beginPath();ys.forEach((v,i)=>x[i?'lineTo':'moveTo'](X(xs[i]),Y(v)));x.stroke()}
+function multi(id,S){const[x,W,H,k]=cv(id),L=36*k,B=20*k,n=S[0].d.length,all=S.flatMap(s=>s.d);let lo=Math.min(...all),hi=Math.max(...all);const pd=(hi-lo)*.12||.1;lo-=pd;hi+=pd;
+ const X=i=>L+(W-L-14)*i/(n-1),Y=v=>H-B-(H-B-26*k)*(v-lo)/(hi-lo);x.strokeStyle='#E8EEE1';x.lineWidth=k;
+ for(let g=0;g<=4;g++){const v=lo+(hi-lo)*g/4;x.beginPath();x.moveTo(L,Y(v));x.lineTo(W-14,Y(v));x.stroke();x.fillStyle='#66756C';x.fillText(pc(v)+'%',4,Y(v)+4*k)}
+ for(let i=0;i<n;i+=Math.ceil(n/6))x.fillText(i,X(i)-4*k,H-4*k);
+ S.forEach((s,j)=>{x.strokeStyle=s.c;x.lineWidth=3*k;x.beginPath();s.d.forEach((v,i)=>x[i?'lineTo':'moveTo'](X(i),Y(v)));x.stroke();x.fillStyle=s.c;x.fillRect(L+j*80*k,6*k,12*k,12*k);x.fillStyle='#1C2B24';x.fillText(s.n,L+j*80*k+16*k,16*k)})}
+function heat(id,g){const[x,W,H,k]=cv(id),R=g.length,C=g[0].length,L=40*k,B=22*k,w=(W-L)/R,h=(H-B)/C;
+ g.forEach((col,i)=>col.forEach((a,j)=>{x.fillStyle=`rgba(27,77,62,${.05+.95*a})`;x.fillRect(L+i*w,H-B-(j+1)*h,w+1,h+1)}));
+ x.fillStyle='#66756C';x.fillText('125%',2,14*k);x.fillText('100%',2,H-B);x.fillText('less money',L,H-6*k);x.fillText('more money',W-72*k,H-6*k)}
+function redraw(){if(!last)return;const d=last;fan('c1',d.pension,true,1);fan('c2',d.wealth,true,1);line('c3',d.ccr,d.avg_a);
+ multi('c4',Object.entries(d.scen).map(([n,v],i)=>({n,d:v,c:[G,'#B3402F','#C98B3C'][i]})));heat('c5',d.heat);
+ spark('s1',d.pension[5],G);spark('s2',d.pension[2],'#C98B3C');spark('s3',d.pension[0],'#7C9A86');spark('s4',d.avg_a,'#3E7C7B')}
+function advise(d){const o=d.opt,P=d.pension,e=P[0].length-1,cut=o['P(>=1 pension cut)'],bad=P[0][e],typ=P[2][e],al=parseFloat($('alpha').value),T=d.T,names=Object.keys(d.strat);
+ const lvl=cut<.25&&bad>=.85?0:(cut<.5&&bad>=.75?1:2),lab=['LOW RISK','MEDIUM RISK','HIGH RISK'][lvl];$('rate').textContent=lab;$('rate').className='badge '+['b-g','b-a','b-r'][lvl];
+ $('verdict').innerHTML=[`<b>Steady plan.</b> In most futures your pension holds or grows: a typical result is ${pc(typ)}% of today's pension after ${T} years, and cuts are uncommon (${pc(cut)} in 100).`,
+  `<b>Mixed plan.</b> Your pension can grow (typical ${pc(typ)}% of today's after ${T} years), but about ${pc(cut)} in 100 futures see at least one cut. A bad-luck case ends near ${pc(bad)}%.`,
+  `<b>Risky plan.</b> About ${pc(cut)} in 100 futures see a pension cut, and a bad-luck case drops to ${pc(bad)}% of today's pension. Consider the steps below.`][lvl];
+ const ok=names.filter(n=>d.strat[n]['P(>=1 pension cut)']<=.35&&d.strat[n]['Rel. pension VaR 5%']>=.85),best=ok.length?ok.reduce((a,b)=>d.strat[b]['Rel. pension mean (T)']>d.strat[a]['Rel. pension mean (T)']?b:a):'100% safe',bm=d.strat[best],A=[];
+ A.push(best==='Our plan'?`Keep the adaptive mix. Among the five options tested, it gives the best balance: average pension ${pc(bm['Rel. pension mean (T)'])}% with cuts in ${pc(bm['P(>=1 pension cut)'])} in 100 futures.`:`Of the options tested, <b>${best}</b> gives the best balance: average pension ${pc(bm['Rel. pension mean (T)'])}%, cuts in ${pc(bm['P(>=1 pension cut)'])} in 100 futures, bad-luck pension ${pc(bm['Rel. pension VaR 5%'])}%.`);
+ if(cut>=.3&&al<.5)A.push(`Raise the safety cushion from ${pc(al)}% to about ${pc(Math.min(.5,al+.2))}% and run again. A bigger cushion lowers the chance of a cut (see "Compare safety cushions").`);
+ if(bad<.9)A.push(`Plan for the bad-luck case: your pension could fall by about ${Math.round(d.p0*(1-bad))} a year from ${Math.round(d.p0)}. Keep roughly that amount in spare savings each year.`);
+ if(d.today_a>.7)A.push(`Today the model puts ${pc(d.today_a)}% of the investment part in stocks. If a sudden drop would worry you, pick a bigger cushion first.`);
+ if(lvl===0)A.push('No change needed. Re-run once a year with your updated savings, because the best mix shifts as the fund grows or shrinks.');else A.push('Re-run with the new settings and compare. Change one setting at a time so you can see what helped.');
+ $('adv').innerHTML=A.map(x=>`<li>${x}</li>`).join('');
+ $('why').textContent=`Rating rule: low risk = cuts in under 25 in 100 futures and a bad-luck pension of at least 85%; high risk = cuts in 50 or more in 100, or a bad-luck pension under 75%. Results also depend on the detail level chosen.`}
+function show(d){last=d;advise(d);const o=d.opt,s=d.safe,T=d.T,P=d.pension,e=P[0].length-1;$('empty').hidden=true;$('out').hidden=false;
+ $('k1').textContent=pc(o['P(>=1 pension cut)'])+' in 100';$('k1c').textContent='100% safe: '+pc(s['P(>=1 pension cut)'])+' in 100, no growth';
+ $('k2').textContent=pc(P[2][e])+'%';$('k2c').textContent='average '+pc(P[5][e])+'% of today';
+ $('k3').textContent=pc(P[0][e])+'%';$('k3c').textContent='only 1 in 20 is worse';
+ $('k4').textContent=pc(d.today_a)+'%';$('k4c').textContent='rest stays in safe bonds';
+ $('b1').textContent=pc(P[2][e])+'%';$('b2').textContent=pc(P[0][e])+'%';$('yrs').textContent='Next '+T+' years';
+ $('pf').textContent='Pot '+Number($('V0').value).toLocaleString()+', cushion '+pc($('alpha').value)+'%, '+T+' years';
+ $('t1').textContent='Starting pension: '+d.p0.toFixed(0)+' per year. Green line = typical, orange dashed = average, shaded = range of outcomes, grey dashed = today (100%).';
+ $('t2').textContent='Cohort wealth relative to the start. It shrinks slowly because the fund pays pensions out.';
+ $('t3').textContent='The model takes more stock risk when coverage is high and plays safer near 100%.';
+ const names=Object.keys(d.strat),rows=[['Chance of a pension cut','P(>=1 pension cut)'],['Average pension after '+T+' years','Rel. pension mean (T)'],['Bad-luck pension (1 in 20)','Rel. pension VaR 5%'],['Fund money left (average)','Rel. wealth mean (T)']];
+ $('cmp').innerHTML='<tr><th></th>'+names.map(n=>`<th>${n}</th>`).join('')+'</tr>'+rows.map(r=>`<tr><td>${r[0]}</td>`+names.map(n=>`<td>${pc(d.strat[n][r[1]])}%</td>`).join('')+'</tr>').join('');
+ $('tech').innerHTML=`<h3>Behind the scenes</h3><p>The fund has ${d.states.toLocaleString()} possible situations (money x coverage). Checking every possible rulebook would take about 10<sup>${Math.round(d.states*Math.log10(21)).toLocaleString()}</sup> tries, which is impossible. Policy iteration found the best rulebook in <b>${d.iters} rounds</b> and ${d.secs} seconds.</p>`;redraw()}
+$('run').onclick=async()=>{const b=$('run'),m=$('msg');b.disabled=true;m.className='pill';m.textContent='Running 5,000 futures... about 10 seconds.';
+ try{const res=await fetch('/api/run',{method:'POST',body:JSON.stringify(getBody())}),d=await res.json();if(!res.ok)throw new Error(d.error);show(d);m.textContent=`Done in ${d.secs}s (${d.states.toLocaleString()} situations checked).`}
+ catch(e){m.className='pill err';m.textContent='Could not run: '+e.message}b.disabled=false};
+addEventListener('resize',redraw);
+const PAPER={0:{c:.407,m:1.139,v:.817,w:.945},.2:{c:.354,m:1.128,v:.841,w:.957},.4:{c:.282,m:1.111,v:.873,w:.976}};
+$('cmpBtn').onclick=async()=>{const b=$('cmpBtn');b.disabled=true;$('cmpN').textContent='Running three cushions... about 15 seconds.';
+ try{const res=await fetch('/api/compare',{method:'POST',body:JSON.stringify(getBody())}),a=await res.json();if(!res.ok)throw new Error(a.error);
+  const K=[['Chance of a pension cut','P(>=1 pension cut)','c'],['Average pension at the end','Rel. pension mean (T)','m'],['Bad-luck pension (1 in 20)','Rel. pension VaR 5%','v'],['Fund money left (average)','Rel. wealth mean (T)','w']];
+  $('cmpA').innerHTML='<tr><th></th>'+a.map(x=>`<th>Cushion ${pc(x.alpha)}% (ours)</th><th>Paper</th>`).join('')+'</tr>'+K.map(k=>`<tr><td>${k[0]}</td>`+a.map(x=>`<td>${pc(x.m[k[1]])}%</td><td>${pc(PAPER[x.alpha][k[2]])}%</td>`).join('')+'</tr>').join('');
+  $('cmpN').textContent='Paper columns are the values quoted in the project README. Ours differ: the paper prints one mortality value but its tables imply another, and results shift with the detail level. A bigger cushion should lower the chance of a cut in both columns.'}
+ catch(e){$('cmpN').textContent='Could not run: '+e.message}b.disabled=false};
+$('csv').onclick=()=>{if(!last)return;const n=Object.keys(last.strat),k=Object.keys(last.strat[n[0]]).filter(x=>x!=='Strategy');
+ const t=[['Metric',...n],...k.map(m=>[m,...n.map(s=>last.strat[s][m])])].map(r=>r.join(',')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='pension_results.csv';a.click()};
+</script></body></html>

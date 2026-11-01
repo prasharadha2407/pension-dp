@@ -439,3 +439,18 @@ Systematic sweeps across model parameters provide key actuarial insights:
 4. **Discretization Robustness ($n_V, n_z, n_a$):**
    - Wealth discretization $n_V \ge 200$ achieves policy stability within 1 action grid interval across the regulatory corridor.
    - Quadrature resolution $n_z \ge 20$ captures Gaussian shock expectations accurately, while action discretization $n_a = 21$ provides a smooth continuous approximation without excessive computational overhead.
+
+
+* * *
+
+## 9. Web UI (plain-language front end)
+
+A browser interface for non-experts, such as pension recipients. It uses the same `pension_core.py` model and needs no extra packages.
+
+```
+python web_app.py
+```
+
+The browser opens at http://localhost:8000. Pick the savings pot, the safety cushion (alpha) and the number of years, then press **RUN MY PLAN**. The page shows the chance of a pension cut, the typical and bad-luck pension, today's suggested stock share, fan charts, and a comparison with a 100% safe strategy. Files: `web_app.py` (server and JSON API at `/api/run`) and `index.html` (interface, light neo-brutalist style).
+
+Note: in this model a 100% safe portfolio never cuts the pension but also never lets it grow. The optimal policy accepts some cut risk for a higher average pension.
